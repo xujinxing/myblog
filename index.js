@@ -14,10 +14,13 @@ var app = express();
 // 设置模板目录
 app.set('views', path.join(__dirname, 'views'));
 // 设置模板引擎为 ejs
-app.set('view engine', 'ejs');
+// app.set('view engine', 'ejs');
+app.set('view engine', 'html');
+app.engine('html', require('ejs-mate'));
+app.locals._layoutFile = 'layout.html';
 
 // 设置静态文件目录
-app.use(express.static(path.join(__dirname, 'public')));
+app.use('/assets', express.static(path.join(__dirname, 'public')));
 // session 中间件
 app.use(session({
   name: config.session.key,// 设置 cookie 中保存 session id 的字段名称
