@@ -3,20 +3,48 @@ var router = express.Router();
 var PostModel = require('../models/posts');
 var CommentModel = require('../models/comments');
 
+var cheerio = require('cheerio');
+var superagent = require('superagent');
+
 var checkLogin = require('../middlewares/check').checkLogin;
 
 // GET /posts 所有用户或者特定用户的文章页
 //   eg: GET /posts?author=xxx
-router.get('/', function(req, res, next) {
-  var author = req.query.author;
+// router.get('/', function(req, res, next) {
+//   var author = req.query.author;
 
-  PostModel.getPosts(author)
-    .then(function (posts) {
-      res.render('posts', {
-        posts: posts
+//   PostModel.getPosts(author)
+//     .then(function (posts) {
+//       res.render('posts', {
+//         posts: posts
+//       });
+//     })
+//     .catch(next);
+// });
+
+router.get('/', function (req, res, next) {
+  superagent.get('https://cnodejs.org/')
+    .end(function (err, sres) {
+      if (err) {
+        return next(err);
+      }
+      var $ = cheerio.load(sres.text);
+      var items = [];
+      $('#topic_list .topic_title_wrapper').each(function (idx, element) {
+        var $element = $(element).find('.topic_title');
+        var $author = $(element).find('.user_avatar pull-left img');
+        var $pv = $(element).find('.count_of_visits');
+        items.push({
+          title: $element.attr('title'),
+          author: $author.title,
+          content: $element.attr('href'),
+          pv: $pv.text()
+        });
       });
-    })
-    .catch(next);
+      res.render('posts', {
+        posts: items
+      });
+    });
 });
 
 // GET /posts/create 发表文章页
